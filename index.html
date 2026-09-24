@@ -1116,7 +1116,7 @@
 <div class="cursor-ring" id="ring" aria-hidden="true"></div>
 <div class="cursor-dot" id="dot" aria-hidden="true"></div>
 
-<!-- Audio -->
+<!-- Audio (1 file, sẽ seek theo timestamp) -->
 <audio id="bg-audio" preload="metadata" crossorigin="anonymous"></audio>
 
 <!-- Toast -->
@@ -1369,7 +1369,7 @@ const Toast = (() => {
 })();
 
 /* ============================================================
-   ============ MUSIC PLAYER + POPUP ============
+   ============ MUSIC PLAYER — TIMESTAMP PLAYLIST ============
    ============================================================ */
 (function () {
   const audio     = $('#bg-audio');
@@ -1393,11 +1393,22 @@ const Toast = (() => {
 
   if (!audio || !pop || !qaMusic) return;
 
-  /* ============ PLAYLIST ============ */
+  /* ============ SINGLE FILE + TIMESTAMP PLAYLIST ============ */
+  const AUDIO_SRC = 'music/chill.mp3';
+  const ALBUM     = 'TMC Collection';
+
+  // Mốc thời gian chia bài (giây). Dựa trên timeline ảnh.
   const PLAYLIST = [
-    { title: 'Chill Lofi', artist: 'TMC Collection', src: 'music/chill.mp3' },
-    // Thêm bài khác:
-    // { title: 'Track 2', artist: 'Artist', src: 'music/track2.mp3' },
+    { title: 'em bo hut thuoc chua',                start: 0,    end: 206  }, // 0:00  - 3:26
+    { title: '2AM',                                 start: 206,  end: 390  }, // 3:26  - 6:30
+    { title: 'em con nho anh ko',                   start: 390,  end: 554  }, // 6:30  - 9:14
+    { title: 'co bao gio',                          start: 554,  end: 798  }, // 9:14  - 13:18
+    { title: 'chang phai tinh dau sao dau den the', start: 798,  end: 999  }, // 13:18 - 16:39
+    { title: 'nguoi nhu a xung dang co don',        start: 999,  end: 1246 }, // 16:39 - 20:46
+    { title: 'anh sao va bau troi',                 start: 1246, end: 1516 }, // 20:46 - 25:16
+    { title: 'tinh nhu la bay xa',                  start: 1516, end: 1733 }, // 25:16 - 28:53
+    { title: 'chiec la tinh yeu',                   start: 1733, end: 1958 }, // 28:53 - 32:38
+    { title: 'let me go',                           start: 1958, end: Infinity } // 32:38 - hết
   ];
 
   let currentIdx = 0;
@@ -1406,6 +1417,9 @@ const Toast = (() => {
   let autoplayBound = true;
   let isDragging = false;
   let wasPlayingBeforeDrag = false;
+  let audioReady = false;
+  let pendingAutoplay = false;
+  let initialRandomApplied = false;
 
   audio.volume = 0.3;
 
@@ -1417,35 +1431,32 @@ const Toast = (() => {
     return `${m}:${sec.toString().padStart(2, '0')}`;
   };
 
-  /* ============ LOAD TRACK ============ */
-  const loadTrack = (idx, autoplay = false) => {
-    if (!PLAYLIST.length) return;
-    if (idx < 0) idx = PLAYLIST.length - 1;
-    if (idx >= PLAYLIST.length) idx = 0;
-    currentIdx = idx;
-
-    const t = PLAYLIST[idx];
-    audio.src = t.src;
-    audio.load();
-
-    titleEl.textContent = t.title;
-    artistEl.textContent = t.artist;
-
-    fill.style.width = '0%';
-    thumb.style.left = '0%';
-    timeCur.textContent = '0:00';
-    timeTot.textContent = '0:00';
-    track.setAttribute('aria-valuenow', '0');
-
-    if (autoplay) {
-      audio.play().then(() => {
-        isPlaying = true;
-        updatePlayUI();
-      }).catch(() => {});
+  const getTrackEnd = (idx) => {
+    const e = PLAYLIST[idx].end;
+    if (e === Infinity) {
+      return (audio.duration && isFinite(audio.duration)) ? audio.duration : PLAYLIST[idx].start + 60;
     }
+    return e;
+  };
+
+  const getTrackDuration = (idx) => getTrackEnd(idx) - PLAYLIST[idx].start;
+
+  const trackAtTime = (t) => {
+    for (let i = 0; i < PLAYLIST.length; i++) {
+      if (t >= PLAYLIST[i].start && (PLAYLIST[i].end === Infinity || t < PLAYLIST[i].end)) {
+        return i;
+      }
+    }
+    return PLAYLIST.length - 1;
   };
 
   /* ============ UI ============ */
+  const updateTrackUI = () => {
+    const t = PLAYLIST[currentIdx];
+    titleEl.textContent = t.title;
+    artistEl.textContent = `${ALBUM} · ${currentIdx + 1}/${PLAYLIST.length}`;
+  };
+
   const updatePlayUI = () => {
     if (isPlaying) {
       pop.classList.add('playing');
@@ -1466,6 +1477,56 @@ const Toast = (() => {
     }
   };
 
+  /* ============ SEEK TO TRACK ============ */
+  const seekToTrack = (idx, autoplay) => {
+    if (idx < 0) idx = PLAYLIST.length - 1;
+    if (idx >= PLAYLIST.length) idx = 0;
+    currentIdx = idx;
+    const t = PLAYLIST[idx];
+
+    const applySeek = () => {
+      try { audio.currentTime = t.start; } catch (_) {}
+      audioReady = true;
+      updateTrackUI();
+      fill.style.width = '0%';
+      thumb.style.left = '0%';
+      timeCur.textContent = '0:00';
+      timeTot.textContent = fmtTime(getTrackDuration(idx));
+      track.setAttribute('aria-valuenow', '0');
+      if (autoplay) {
+        audio.play().then(() => {
+          isPlaying = true;
+          updatePlayUI();
+        }).catch(() => {});
+      }
+    };
+
+    if (audio.readyState >= 1) applySeek();
+    else {
+      const onMeta = () => {
+        audio.removeEventListener('loadedmetadata', onMeta);
+        applySeek();
+      };
+      audio.addEventListener('loadedmetadata', onMeta);
+    }
+  };
+
+  /* ============ INIT AUDIO ============ */
+  const initAudio = () => {
+    if (audio.src) return;
+    audio.src = AUDIO_SRC;
+    audio.load();
+    audio.addEventListener('loadedmetadata', () => {
+      if (!initialRandomApplied) {
+        initialRandomApplied = true;
+        // Random 1 bài khi vào web
+        const randomIdx = Math.floor(Math.random() * PLAYLIST.length);
+        seekToTrack(randomIdx, false);
+      }
+    }, { once: true });
+  };
+  initAudio();
+
   /* ============ POPUP OPEN/CLOSE ============ */
   const positionPopup = () => {
     const r = qaMusic.getBoundingClientRect();
@@ -1474,9 +1535,8 @@ const Toast = (() => {
     const maxLeft = window.innerWidth - popW - 12;
     if (left > maxLeft) left = maxLeft;
     if (left < 12) left = 12;
-    const top = r.bottom + 8;
     pop.style.left = left + 'px';
-    pop.style.top = top + 'px';
+    pop.style.top = (r.bottom + 8) + 'px';
     pop.style.right = 'auto';
   };
 
@@ -1517,37 +1577,34 @@ const Toast = (() => {
   qaMusic.addEventListener('click', (e) => {
     e.stopPropagation();
     togglePopup();
-    if (!audio.src) loadTrack(currentIdx, false);
   });
 
   btnClose.addEventListener('click', closePopup);
 
-  /* ============ PLAY/PAUSE ============ */
+  /* ============ CONTROLS ============ */
   btnPlay.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      if (!audio.src) loadTrack(currentIdx, false);
-      audio.play().catch(() => Toast.show('Không phát được nhạc', 'error'));
-    }
+    if (isPlaying) audio.pause();
+    else audio.play().catch(() => Toast.show('Không phát được nhạc', 'error'));
   });
 
   btnPrev.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (audio.currentTime > 3) {
-      audio.currentTime = 0;
+    const relTime = audio.currentTime - PLAYLIST[currentIdx].start;
+    if (relTime > 3) {
+      // Restart bài hiện tại
+      audio.currentTime = PLAYLIST[currentIdx].start;
       fill.style.width = '0%';
       thumb.style.left = '0%';
       timeCur.textContent = '0:00';
     } else {
-      loadTrack(currentIdx - 1, isPlaying);
+      seekToTrack(currentIdx - 1, isPlaying);
     }
   });
 
   btnNext.addEventListener('click', (e) => {
     e.stopPropagation();
-    loadTrack(currentIdx + 1, isPlaying);
+    seekToTrack(currentIdx + 1, isPlaying);
   });
 
   btnLoop.addEventListener('click', (e) => {
@@ -1560,7 +1617,7 @@ const Toast = (() => {
     Toast.show(labels[loopMode], 'info', 1200);
   });
 
-  /* ============ PROGRESS BAR — SEEK ============ */
+  /* ============ PROGRESS BAR (theo bài hiện tại) ============ */
   const getPercent = (e, el) => {
     const rect = el.getBoundingClientRect();
     const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
@@ -1573,16 +1630,16 @@ const Toast = (() => {
     track.setAttribute('aria-valuenow', Math.round(pct * 100));
   };
 
-  const seekTo = (pct) => {
-    if (!audio.duration || !isFinite(audio.duration)) return;
-    audio.currentTime = pct * audio.duration;
+  const seekToPercent = (pct) => {
+    const dur = getTrackDuration(currentIdx);
+    audio.currentTime = PLAYLIST[currentIdx].start + pct * dur;
     setVisual(pct);
-    timeCur.textContent = fmtTime(audio.currentTime);
+    timeCur.textContent = fmtTime(pct * dur);
   };
 
   track.addEventListener('click', (e) => {
     if (e.target.closest('.mp-thumb')) return;
-    seekTo(getPercent(e, track));
+    seekToPercent(getPercent(e, track));
   });
 
   let pointerId = null;
@@ -1594,23 +1651,22 @@ const Toast = (() => {
     track.classList.add('dragging');
     wasPlayingBeforeDrag = isPlaying;
     if (wasPlayingBeforeDrag) audio.pause();
-
     const pct = getPercent(e, track);
     setVisual(pct);
-    timeCur.textContent = fmtTime(pct * (audio.duration || 0));
+    timeCur.textContent = fmtTime(pct * getTrackDuration(currentIdx));
   });
 
   track.addEventListener('pointermove', (e) => {
     if (!isDragging || e.pointerId !== pointerId) return;
     const pct = getPercent(e, track);
     setVisual(pct);
-    timeCur.textContent = fmtTime(pct * (audio.duration || 0));
+    timeCur.textContent = fmtTime(pct * getTrackDuration(currentIdx));
   });
 
   const endDrag = (e) => {
     if (!isDragging) return;
     if (pointerId !== null && e.pointerId !== pointerId) return;
-    seekTo(getPercent(e, track));
+    seekToPercent(getPercent(e, track));
     isDragging = false;
     track.classList.remove('dragging');
     if (pointerId !== null) {
@@ -1619,44 +1675,48 @@ const Toast = (() => {
     }
     if (wasPlayingBeforeDrag) audio.play().catch(() => {});
   };
-
   track.addEventListener('pointerup', endDrag);
   track.addEventListener('pointercancel', endDrag);
 
   track.addEventListener('keydown', (e) => {
-    if (!audio.duration || !isFinite(audio.duration)) return;
+    const dur = getTrackDuration(currentIdx);
+    const rel = audio.currentTime - PLAYLIST[currentIdx].start;
     const step = 5;
     if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
       e.preventDefault();
-      audio.currentTime = Math.min(audio.duration, audio.currentTime + step);
+      audio.currentTime = PLAYLIST[currentIdx].start + Math.min(dur, rel + step);
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
       e.preventDefault();
-      audio.currentTime = Math.max(0, audio.currentTime - step);
+      audio.currentTime = PLAYLIST[currentIdx].start + Math.max(0, rel - step);
     } else if (e.key === 'Home') {
       e.preventDefault();
-      audio.currentTime = 0;
-    } else if (e.key === 'End') {
-      e.preventDefault();
-      audio.currentTime = audio.duration;
+      audio.currentTime = PLAYLIST[currentIdx].start;
     }
   });
 
   /* ============ AUDIO EVENTS ============ */
   let rafId = null;
   const loopUpdate = () => {
-    if (!isDragging) {
-      const d = audio.duration;
-      if (d && isFinite(d)) {
-        const pct = audio.currentTime / d;
-        setVisual(pct);
-        timeCur.textContent = fmtTime(audio.currentTime);
+    if (!isDragging && audioReady) {
+      const t = audio.currentTime;
+      // Detect track change
+      const detectedIdx = trackAtTime(t);
+      if (detectedIdx !== currentIdx) {
+        currentIdx = detectedIdx;
+        updateTrackUI();
+        timeTot.textContent = fmtTime(getTrackDuration(currentIdx));
       }
+      const dur = getTrackDuration(currentIdx);
+      const rel = t - PLAYLIST[currentIdx].start;
+      const pct = Math.max(0, Math.min(1, rel / dur));
+      setVisual(pct);
+      timeCur.textContent = fmtTime(rel);
     }
     rafId = requestAnimationFrame(loopUpdate);
   };
 
   audio.addEventListener('loadedmetadata', () => {
-    timeTot.textContent = fmtTime(audio.duration);
+    timeTot.textContent = fmtTime(getTrackDuration(currentIdx));
   });
 
   audio.addEventListener('play', () => {
@@ -1674,12 +1734,12 @@ const Toast = (() => {
   audio.addEventListener('ended', () => {
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     if (loopMode === 'one') {
-      audio.currentTime = 0;
+      audio.currentTime = PLAYLIST[currentIdx].start;
       audio.play().catch(() => {});
     } else if (loopMode === 'all') {
-      loadTrack(currentIdx + 1, true);
+      seekToTrack(currentIdx + 1, true);
     } else {
-      if (currentIdx < PLAYLIST.length - 1) loadTrack(currentIdx + 1, true);
+      if (currentIdx < PLAYLIST.length - 1) seekToTrack(currentIdx + 1, true);
       else { isPlaying = false; updatePlayUI(); }
     }
   });
@@ -1699,7 +1759,7 @@ const Toast = (() => {
   };
   const tryAutoplay = () => {
     if (isPlaying) { unbindAutoplay(); return; }
-    if (!audio.src) loadTrack(currentIdx, false);
+    if (audio.readyState < 1) { pendingAutoplay = true; return; }
     const p = audio.play();
     if (p && typeof p.then === 'function') {
       p.then(() => unbindAutoplay()).catch(() => {});
@@ -1707,13 +1767,21 @@ const Toast = (() => {
   };
   events.forEach(ev => window.addEventListener(ev, tryAutoplay, { passive: true }));
 
+  // Sau khi metadata load xong + user đã tương tác → phát
+  audio.addEventListener('loadedmetadata', () => {
+    if (pendingAutoplay) {
+      pendingAutoplay = false;
+      audio.play().catch(() => {});
+    }
+  });
+
   /* ============ PAUSE ON TAB HIDDEN ============ */
   document.addEventListener('visibilitychange', () => {
     if (document.hidden && !audio.paused) audio.pause();
   });
 
-  /* ============ INIT ============ */
-  loadTrack(0, false);
+  /* ============ INIT UI ============ */
+  updateTrackUI();
   updatePlayUI();
   pop.setAttribute('aria-hidden', 'true');
 })();
