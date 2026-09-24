@@ -15,7 +15,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-<!-- Mobile detection -->
 <script>
 (function(){
   var ua = navigator.userAgent;
@@ -36,7 +35,6 @@
   :root {
     --bg: #08080b;
     --card: rgba(20, 20, 26, 0.72);
-    --card-hover: rgba(28, 28, 36, 0.85);
     --card-solid: #14141a;
     --line: rgba(255, 255, 255, 0.07);
     --line-2: rgba(255, 255, 255, 0.12);
@@ -106,7 +104,6 @@
       linear-gradient(180deg, rgba(8, 8, 11, 0.6) 0%, rgba(8, 8, 11, 0.85) 100%);
   }
 
-  /* Aurora nhẹ, chỉ 2 blobs */
   .aurora {
     position: fixed;
     inset: 0;
@@ -142,7 +139,7 @@
     50%      { transform: translate3d(-120px, -80px, 0) scale(1.2); }
   }
 
-  /* ============ CURSOR (desktop only) ============ */
+  /* ============ CURSOR ============ */
   body.has-cursor,
   body.has-cursor a,
   body.has-cursor button { cursor: none; }
@@ -200,7 +197,7 @@
     100% { opacity: 1; transform: translateY(0); }
   }
 
-  /* ============ HERO CARD ============ */
+  /* ============ HERO ============ */
   .hero {
     position: relative;
     background: var(--card);
@@ -231,7 +228,6 @@
     0%, 100% { opacity: 0.4; transform: translateX(-30%); }
     50%      { opacity: 1; transform: translateX(30%); }
   }
-  /* Glow accent phía sau avatar */
   .hero::after {
     content: '';
     position: absolute;
@@ -243,7 +239,6 @@
     pointer-events: none;
   }
 
-  /* Status bar trong hero */
   .hero-status {
     display: flex;
     align-items: center;
@@ -312,7 +307,6 @@
     100% { transform: scale(2.4); opacity: 0; }
   }
 
-  /* Phần identity chính */
   .hero-main {
     display: flex;
     align-items: center;
@@ -368,15 +362,9 @@
     z-index: 3;
     box-shadow: 0 0 14px var(--accent-glow);
   }
-  .avatar-badge svg {
-    width: 12px; height: 12px;
-    fill: #08080b;
-  }
+  .avatar-badge svg { width: 12px; height: 12px; fill: #08080b; }
 
-  .hero-info {
-    flex: 1;
-    min-width: 0;
-  }
+  .hero-info { flex: 1; min-width: 0; }
   .hero-name {
     font-size: 30px;
     font-weight: 800;
@@ -416,7 +404,6 @@
     font-size: 10.5px;
     font-weight: 500;
     color: var(--text-2);
-    transition: all 0.3s var(--ease-io);
   }
   .tag.accent {
     background: rgba(212, 255, 61, 0.1);
@@ -424,7 +411,6 @@
     color: var(--accent);
   }
 
-  /* Bio */
   .hero-bio {
     margin-top: 18px;
     padding-top: 18px;
@@ -435,10 +421,7 @@
     position: relative;
     z-index: 1;
   }
-  .hero-bio strong {
-    color: var(--text);
-    font-weight: 600;
-  }
+  .hero-bio strong { color: var(--text); font-weight: 600; }
 
   /* ============ QUICK ACTIONS ============ */
   .quick-actions {
@@ -499,6 +482,288 @@
   }
   .qa-btn.music.playing svg { animation: music-spin 3s linear infinite; }
   @keyframes music-spin { to { transform: rotate(360deg); } }
+
+  /* ============================================================
+     ============ MUSIC POPUP ============
+     ============================================================ */
+  .music-pop {
+    position: fixed;
+    z-index: 9999;
+    width: 320px;
+    max-width: calc(100vw - 24px);
+    background: rgba(20, 20, 26, 0.96);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid var(--line-2);
+    border-radius: 18px;
+    padding: 14px 16px 16px;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.05) inset,
+      0 24px 50px -12px rgba(0, 0, 0, 0.75),
+      0 8px 20px -6px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+    pointer-events: none;
+    transition:
+      opacity 0.25s var(--ease-out),
+      transform 0.35s var(--ease-spring);
+    transform-origin: top right;
+  }
+  .music-pop.open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+  .music-pop::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 15%; right: 15%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212, 255, 61, 0.5), transparent);
+  }
+  .music-pop::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 24px;
+    width: 12px; height: 12px;
+    background: rgba(20, 20, 26, 0.96);
+    border-left: 1px solid var(--line-2);
+    border-top: 1px solid var(--line-2);
+    transform: rotate(45deg);
+    border-top-left-radius: 3px;
+  }
+
+  .mp-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .mp-disc {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: radial-gradient(circle at 30% 30%, #2a2a33, #0e0e13);
+    border: 1px solid var(--line-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .music-pop.playing .mp-disc { animation: disc-spin 6s linear infinite; }
+  @keyframes disc-spin { to { transform: rotate(360deg); } }
+  .mp-disc::before {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    border-radius: 50%;
+    border: 1px dashed rgba(212, 255, 61, 0.35);
+  }
+  .mp-disc::after {
+    content: '';
+    position: absolute;
+    inset: 15px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent-glow);
+  }
+  .mp-info { flex: 1; min-width: 0; }
+  .mp-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+    transition: color 0.3s var(--ease-io);
+  }
+  .music-pop.playing .mp-title { color: var(--accent); }
+  .mp-artist {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mp-close {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    transition: all 0.25s var(--ease-io);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mp-close:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+  }
+  .mp-close svg {
+    width: 13px; height: 13px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .mp-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .mp-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-3);
+    min-width: 30px;
+    text-align: center;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .mp-time.current { color: var(--accent); }
+
+  .mp-track {
+    position: relative;
+    flex: 1;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+  }
+  .mp-rail {
+    position: relative;
+    width: 100%;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.08);
+    transition: height 0.2s var(--ease-io);
+  }
+  .mp-track:hover .mp-rail,
+  .mp-track.dragging .mp-rail { height: 5px; }
+
+  .mp-fill {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent-2), var(--accent));
+    width: 0%;
+    pointer-events: none;
+    box-shadow: 0 0 8px rgba(212, 255, 61, 0.35);
+    transition: width 0.08s linear;
+  }
+  .mp-track.dragging .mp-fill { transition: none; }
+
+  .mp-thumb {
+    position: absolute;
+    top: 50%;
+    left: 0%;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid #14141a;
+    transform: translate(-50%, -50%) scale(0.85);
+    box-shadow: 0 0 0 0 rgba(212, 255, 61, 0.4), 0 3px 8px rgba(0,0,0,0.5);
+    pointer-events: none;
+    transition: transform 0.25s var(--ease-spring), box-shadow 0.3s var(--ease-io);
+  }
+  .mp-track:hover .mp-thumb,
+  .mp-track.dragging .mp-thumb {
+    transform: translate(-50%, -50%) scale(1.15);
+    box-shadow: 0 0 0 5px rgba(212, 255, 61, 0.12), 0 3px 8px rgba(0,0,0,0.5);
+  }
+  .is-mobile .mp-thumb { width: 14px; height: 14px; }
+
+  .mp-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .mp-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--line-2);
+    color: var(--text-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s var(--ease-io);
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+    font: inherit;
+    padding: 0;
+  }
+  .mp-btn:hover {
+    color: var(--accent);
+    border-color: rgba(212, 255, 61, 0.35);
+    background: rgba(212, 255, 61, 0.06);
+    transform: scale(1.06);
+  }
+  .mp-btn:active { transform: scale(0.94); }
+  .mp-btn svg {
+    width: 13px; height: 13px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .mp-btn svg.fill { fill: currentColor; stroke: none; }
+
+  .mp-btn.main {
+    width: 42px; height: 42px;
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #08080b;
+    box-shadow: 0 4px 14px -4px var(--accent-glow);
+  }
+  .mp-btn.main:hover {
+    background: #e0ff5e;
+    color: #08080b;
+    transform: scale(1.08);
+  }
+  .mp-btn.main svg { width: 15px; height: 15px; }
+
+  .mp-btn.active {
+    color: var(--accent);
+    border-color: rgba(212, 255, 61, 0.35);
+    background: rgba(212, 255, 61, 0.08);
+  }
+
+  @media (max-width: 480px) {
+    .music-pop {
+      width: calc(100vw - 24px);
+      left: 12px !important;
+      right: 12px !important;
+      transform-origin: top center;
+    }
+    .music-pop::after { display: none; }
+  }
+
+  .is-mobile .music-pop {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: #14141a;
+  }
+  .is-low-end .music-pop.playing .mp-disc { animation: none; }
 
   /* ============ BENTO GRID ============ */
   .bento {
@@ -567,14 +832,8 @@
     transform: scale(1.1) rotate(-6deg);
     background: rgba(255, 255, 255, 0.1);
   }
-  .bento-item .bento-icon svg {
-    width: 20px; height: 20px;
-    display: block;
-  }
-  .bento-item .bento-text {
-    position: relative;
-    z-index: 1;
-  }
+  .bento-item .bento-icon svg { width: 20px; height: 20px; display: block; }
+  .bento-item .bento-text { position: relative; z-index: 1; }
   .bento-item .bento-label {
     font-size: 15px;
     font-weight: 600;
@@ -582,9 +841,7 @@
     margin-bottom: 2px;
     transition: color 0.3s var(--ease-io);
   }
-  .bento-item:hover .bento-label {
-    color: var(--brand-color, var(--accent));
-  }
+  .bento-item:hover .bento-label { color: var(--brand-color, var(--accent)); }
   .bento-item .bento-sub {
     font-family: 'JetBrains Mono', monospace;
     font-size: 10.5px;
@@ -614,7 +871,6 @@
     transform: translate(2px, -2px) scale(1.15);
   }
 
-  /* Brand colors via CSS vars */
   .bento-item[data-brand="facebook"] {
     --brand-color: #1877F2;
     --brand-glow: rgba(24, 119, 242, 0.15);
@@ -664,7 +920,6 @@
     --brand-shadow: rgba(234, 67, 53, 0.3);
   }
 
-  /* Icon fills */
   .bento-item[data-brand="facebook"]  .bento-icon svg { fill: #1877F2; }
   .bento-item[data-brand="instagram"] .bento-icon svg { fill: #E4405F; }
   .bento-item[data-brand="tiktok"]    .bento-icon svg { fill: #fff; }
@@ -679,7 +934,6 @@
     letter-spacing: -0.02em;
   }
 
-  /* Item đặc biệt: GitHub wide (2 cột trên mobile) */
   .bento-item.wide { grid-column: span 2; }
 
   /* ============ FOOTER ============ */
@@ -694,11 +948,7 @@
     color: var(--text-4);
     animation: slide-up 0.8s var(--ease-out) 0.9s both;
   }
-  .footer-clock {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-  }
+  .footer-clock { display: inline-flex; align-items: center; gap: 7px; }
   .footer-clock::before {
     content: '';
     width: 5px; height: 5px;
@@ -764,13 +1014,11 @@
     .bento-item.wide { grid-column: span 1; }
     .bento-item { min-height: 140px; }
   }
-
   @media (min-width: 900px) {
     .bento { grid-template-columns: repeat(4, 1fr); }
     .hero { padding: 28px 28px 24px; }
     .hero-name { font-size: 34px; }
   }
-
   @media (max-width: 380px) {
     .hero { padding: 18px 18px 16px; }
     .avatar-wrap { width: 72px; height: 72px; }
@@ -794,11 +1042,7 @@
     .aurora, .bg-layer img { animation: none; }
   }
 
-  /* =========================================================
-     ====== MOBILE PERFORMANCE TUNING ======
-     ========================================================= */
-
-  /* Mobile: bỏ backdrop-filter, dùng nền đặc */
+  /* ====== MOBILE PERFORMANCE ====== */
   .is-mobile .hero,
   .is-mobile .qa-btn,
   .is-mobile .bento-item {
@@ -806,11 +1050,8 @@
     -webkit-backdrop-filter: none;
     background: var(--card-solid);
   }
-  .is-mobile .hero {
-    background: rgba(20, 20, 26, 0.95);
-  }
+  .is-mobile .hero { background: rgba(20, 20, 26, 0.95); }
 
-  /* Aurora: giảm blur + đóng băng ở frame đẹp */
   .is-mobile .aurora {
     opacity: 0.35;
     filter: blur(50px);
@@ -818,47 +1059,32 @@
   .is-mobile .aurora span { animation: none; }
   .is-mobile .aurora span:nth-child(1) { transform: translate3d(40px, 30px, 0) scale(1.05); }
   .is-mobile .aurora span:nth-child(2) { transform: translate3d(-50px, -25px, 0) scale(1.1); }
-
-  /* Background zoom: tắt animation, đóng băng ở scale đẹp */
-  .is-mobile .bg-layer img {
-    animation: none;
-    transform: scale(1.04);
-  }
-
-  /* Bỏ will-change trên mobile */
+  .is-mobile .bg-layer img { animation: none; transform: scale(1.04); }
   .is-mobile .aurora span,
   .is-mobile .cursor-dot,
   .is-mobile .cursor-ring { will-change: auto; }
-
-  /* Avatar ring: vẫn xoay nhưng chậm hơn */
   .is-mobile .avatar-ring { animation-duration: 8s; }
-
-  /* Giảm animation hero line */
   .is-mobile .hero::before {
     animation: none;
     transform: translateX(0);
     opacity: 0.7;
   }
 
-  /* Low-end: tắt thêm */
   .is-low-end .aurora { display: none; }
   .is-low-end .avatar-ring { animation: none; }
   .is-low-end .bento-item::before { display: none; }
   .is-low-end .hero::before { display: none; }
   .is-low-end .hero::after { display: none; }
 
-  /* Save-data: tắt hết decorative */
   .save-data .aurora { display: none; }
   .save-data .bg-layer img { display: none; }
 
-  /* Pause animation khi scroll */
   body.is-scrolling .avatar-ring,
   body.is-scrolling .qa-btn.music.playing svg,
   body.is-scrolling .status-live .dot::after {
     animation-play-state: paused !important;
   }
 
-  /* ============ TOUCH FEEDBACK ============ */
   @media (hover: none) {
     .bento-item:active {
       transform: scale(0.97);
@@ -884,7 +1110,6 @@
        onerror="this.style.display='none';">
 </div>
 
-<!-- Aurora -->
 <div class="aurora" aria-hidden="true"><span></span><span></span></div>
 
 <!-- Cursor -->
@@ -892,9 +1117,7 @@
 <div class="cursor-dot" id="dot" aria-hidden="true"></div>
 
 <!-- Audio -->
-<audio id="bg-audio" loop preload="metadata" crossorigin="anonymous">
-  <source src="music/chill.mp3" type="audio/mpeg">
-</audio>
+<audio id="bg-audio" preload="metadata" crossorigin="anonymous"></audio>
 
 <!-- Toast -->
 <div class="toast-container" id="toast-container" aria-live="polite"></div>
@@ -903,7 +1126,6 @@
 
   <!-- ============ HERO ============ -->
   <section class="hero">
-    <!-- Status bar -->
     <div class="hero-status">
       <span class="status-loc">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -915,7 +1137,6 @@
       </span>
     </div>
 
-    <!-- Identity -->
     <div class="hero-main">
       <div class="avatar-wrap">
         <div class="avatar-ring" aria-hidden="true"></div>
@@ -944,7 +1165,6 @@
       </div>
     </div>
 
-    <!-- Bio -->
     <p class="hero-bio">
       <strong>Mình làm vài thứ.</strong> Bạn cứ xem hết link bên dưới là biết — làm web, quay video, viết linh tinh.
     </p>
@@ -964,6 +1184,48 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>
       <span>Share</span>
     </button>
+  </div>
+
+  <!-- ============ MUSIC POPUP ============ -->
+  <div class="music-pop" id="music-pop" role="dialog" aria-label="Music player" aria-hidden="true">
+    <div class="mp-head">
+      <div class="mp-disc" aria-hidden="true"></div>
+      <div class="mp-info">
+        <div class="mp-title" id="mp-title">Chill Lofi</div>
+        <div class="mp-artist" id="mp-artist">TMC Collection</div>
+      </div>
+      <button class="mp-close" id="mp-close" type="button" aria-label="Đóng">
+        <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <div class="mp-progress">
+      <span class="mp-time current" id="mp-time-cur">0:00</span>
+      <div class="mp-track" id="mp-track" role="slider"
+           aria-label="Tiến trình bài hát" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+        <div class="mp-rail">
+          <div class="mp-fill" id="mp-fill"></div>
+          <div class="mp-thumb" id="mp-thumb"></div>
+        </div>
+      </div>
+      <span class="mp-time" id="mp-time-tot">0:00</span>
+    </div>
+
+    <div class="mp-controls">
+      <button class="mp-btn" id="mp-prev" type="button" aria-label="Bài trước">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M19 20L9 12l10-8v16zM5 19V5"/></svg>
+      </button>
+      <button class="mp-btn main" id="mp-play" type="button" aria-label="Phát">
+        <svg id="mp-icon-play" viewBox="0 0 24 24" class="fill"><path d="M8 5v14l11-7z"/></svg>
+        <svg id="mp-icon-pause" viewBox="0 0 24 24" class="fill" style="display:none;"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+      </button>
+      <button class="mp-btn" id="mp-next" type="button" aria-label="Bài sau">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M5 4l10 8-10 8V4zM19 5v14"/></svg>
+      </button>
+      <button class="mp-btn" id="mp-loop" type="button" aria-label="Lặp lại" title="Lặp tất cả">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      </button>
+    </div>
   </div>
 
   <!-- ============ BENTO GRID ============ -->
@@ -1106,72 +1368,354 @@ const Toast = (() => {
   setInterval(update, IS_MOBILE ? 30000 : 20000);
 })();
 
-/* ============ AUDIO ============ */
+/* ============================================================
+   ============ MUSIC PLAYER + POPUP ============
+   ============================================================ */
 (function () {
-  const audio = $('#bg-audio');
-  const btn = $('#music-toggle');
-  const text = $('#music-text');
-  if (!audio || !btn || !text) return;
+  const audio     = $('#bg-audio');
+  const qaMusic   = $('#music-toggle');
+  const qaMusicTx = $('#music-text');
+  const pop       = $('#music-pop');
+  const btnClose  = $('#mp-close');
+  const titleEl   = $('#mp-title');
+  const artistEl  = $('#mp-artist');
+  const timeCur   = $('#mp-time-cur');
+  const timeTot   = $('#mp-time-tot');
+  const track     = $('#mp-track');
+  const fill      = $('#mp-fill');
+  const thumb     = $('#mp-thumb');
+  const btnPlay   = $('#mp-play');
+  const btnPrev   = $('#mp-prev');
+  const btnNext   = $('#mp-next');
+  const btnLoop   = $('#mp-loop');
+  const iconPlay  = $('#mp-icon-play');
+  const iconPause = $('#mp-icon-pause');
+
+  if (!audio || !pop || !qaMusic) return;
+
+  /* ============ PLAYLIST ============ */
+  const PLAYLIST = [
+    { title: 'Chill Lofi', artist: 'TMC Collection', src: 'music/chill.mp3' },
+    // Thêm bài khác:
+    // { title: 'Track 2', artist: 'Artist', src: 'music/track2.mp3' },
+  ];
+
+  let currentIdx = 0;
+  let isPlaying = false;
+  let loopMode = 'all';
+  let autoplayBound = true;
+  let isDragging = false;
+  let wasPlayingBeforeDrag = false;
 
   audio.volume = 0.3;
-  let isPlaying = false;
-  let autoplayBound = true;
 
-  const setUI = (state) => {
-    if (state === 'playing') {
-      btn.classList.add('playing');
-      text.textContent = 'Playing';
-      btn.setAttribute('aria-pressed', 'true');
-    } else if (state === 'paused') {
-      btn.classList.remove('playing');
-      text.textContent = 'Music';
-      btn.setAttribute('aria-pressed', 'false');
-    } else if (state === 'error') {
-      btn.classList.remove('playing');
-      text.textContent = 'Lỗi';
-      btn.setAttribute('aria-pressed', 'false');
+  /* ============ HELPERS ============ */
+  const fmtTime = (s) => {
+    if (!isFinite(s) || s < 0) s = 0;
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, '0')}`;
+  };
+
+  /* ============ LOAD TRACK ============ */
+  const loadTrack = (idx, autoplay = false) => {
+    if (!PLAYLIST.length) return;
+    if (idx < 0) idx = PLAYLIST.length - 1;
+    if (idx >= PLAYLIST.length) idx = 0;
+    currentIdx = idx;
+
+    const t = PLAYLIST[idx];
+    audio.src = t.src;
+    audio.load();
+
+    titleEl.textContent = t.title;
+    artistEl.textContent = t.artist;
+
+    fill.style.width = '0%';
+    thumb.style.left = '0%';
+    timeCur.textContent = '0:00';
+    timeTot.textContent = '0:00';
+    track.setAttribute('aria-valuenow', '0');
+
+    if (autoplay) {
+      audio.play().then(() => {
+        isPlaying = true;
+        updatePlayUI();
+      }).catch(() => {});
     }
   };
 
-  const unbindAutoplay = () => {
-    if (!autoplayBound) return;
-    autoplayBound = false;
-    events.forEach(ev => window.removeEventListener(ev, tryPlay));
-  };
-
-  const tryPlay = () => {
-    if (isPlaying) return;
-    const p = audio.play();
-    if (p && typeof p.then === 'function') {
-      p.then(() => { isPlaying = true; setUI('playing'); unbindAutoplay(); }).catch(() => {});
+  /* ============ UI ============ */
+  const updatePlayUI = () => {
+    if (isPlaying) {
+      pop.classList.add('playing');
+      qaMusic.classList.add('playing');
+      qaMusic.setAttribute('aria-pressed', 'true');
+      if (qaMusicTx) qaMusicTx.textContent = 'Playing';
+      iconPlay.style.display = 'none';
+      iconPause.style.display = '';
+      btnPlay.setAttribute('aria-label', 'Tạm dừng');
+    } else {
+      pop.classList.remove('playing');
+      qaMusic.classList.remove('playing');
+      qaMusic.setAttribute('aria-pressed', 'false');
+      if (qaMusicTx) qaMusicTx.textContent = 'Music';
+      iconPlay.style.display = '';
+      iconPause.style.display = 'none';
+      btnPlay.setAttribute('aria-label', 'Phát');
     }
   };
 
-  const events = ['click', 'touchstart', 'keydown', 'pointerdown'];
-  events.forEach(ev => window.addEventListener(ev, tryPlay, { passive: true }));
-  tryPlay();
+  /* ============ POPUP OPEN/CLOSE ============ */
+  const positionPopup = () => {
+    const r = qaMusic.getBoundingClientRect();
+    const popW = pop.offsetWidth || 320;
+    let left = r.left;
+    const maxLeft = window.innerWidth - popW - 12;
+    if (left > maxLeft) left = maxLeft;
+    if (left < 12) left = 12;
+    const top = r.bottom + 8;
+    pop.style.left = left + 'px';
+    pop.style.top = top + 'px';
+    pop.style.right = 'auto';
+  };
 
-  btn.addEventListener('click', (e) => {
+  const openPopup = () => {
+    positionPopup();
+    pop.classList.add('open');
+    pop.setAttribute('aria-hidden', 'false');
+    document.addEventListener('click', onDocClick, true);
+    document.addEventListener('keydown', onKeyDown);
+    window.addEventListener('resize', positionPopup, { passive: true });
+    window.addEventListener('scroll', positionPopup, { passive: true });
+  };
+
+  const closePopup = () => {
+    pop.classList.remove('open');
+    pop.setAttribute('aria-hidden', 'true');
+    document.removeEventListener('click', onDocClick, true);
+    document.removeEventListener('keydown', onKeyDown);
+    window.removeEventListener('resize', positionPopup);
+    window.removeEventListener('scroll', positionPopup);
+  };
+
+  const togglePopup = () => {
+    if (pop.classList.contains('open')) closePopup();
+    else openPopup();
+  };
+
+  const onDocClick = (e) => {
+    if (pop.contains(e.target)) return;
+    if (qaMusic.contains(e.target)) return;
+    closePopup();
+  };
+
+  const onKeyDown = (e) => {
+    if (e.key === 'Escape') closePopup();
+  };
+
+  qaMusic.addEventListener('click', (e) => {
+    e.stopPropagation();
+    togglePopup();
+    if (!audio.src) loadTrack(currentIdx, false);
+  });
+
+  btnClose.addEventListener('click', closePopup);
+
+  /* ============ PLAY/PAUSE ============ */
+  btnPlay.addEventListener('click', (e) => {
     e.stopPropagation();
     if (isPlaying) {
       audio.pause();
-      isPlaying = false;
-      setUI('paused');
     } else {
-      const p = audio.play();
-      if (p && typeof p.then === 'function') {
-        p.then(() => { isPlaying = true; setUI('playing'); unbindAutoplay(); }).catch(() => setUI('error'));
-      }
+      if (!audio.src) loadTrack(currentIdx, false);
+      audio.play().catch(() => Toast.show('Không phát được nhạc', 'error'));
     }
   });
 
-  audio.addEventListener('pause', () => { if (isPlaying) { isPlaying = false; setUI('paused'); } });
-  audio.addEventListener('play', () => { if (!isPlaying) { isPlaying = true; setUI('playing'); } });
-  audio.addEventListener('error', () => setUI('error'));
+  btnPrev.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (audio.currentTime > 3) {
+      audio.currentTime = 0;
+      fill.style.width = '0%';
+      thumb.style.left = '0%';
+      timeCur.textContent = '0:00';
+    } else {
+      loadTrack(currentIdx - 1, isPlaying);
+    }
+  });
 
+  btnNext.addEventListener('click', (e) => {
+    e.stopPropagation();
+    loadTrack(currentIdx + 1, isPlaying);
+  });
+
+  btnLoop.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const modes = ['all', 'one', 'none'];
+    const labels = { all: 'Lặp tất cả', one: 'Lặp 1 bài', none: 'Không lặp' };
+    loopMode = modes[(modes.indexOf(loopMode) + 1) % modes.length];
+    btnLoop.classList.toggle('active', loopMode !== 'none');
+    btnLoop.setAttribute('title', labels[loopMode]);
+    Toast.show(labels[loopMode], 'info', 1200);
+  });
+
+  /* ============ PROGRESS BAR — SEEK ============ */
+  const getPercent = (e, el) => {
+    const rect = el.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+    return Math.max(0, Math.min(1, x / rect.width));
+  };
+
+  const setVisual = (pct) => {
+    fill.style.width = (pct * 100) + '%';
+    thumb.style.left = (pct * 100) + '%';
+    track.setAttribute('aria-valuenow', Math.round(pct * 100));
+  };
+
+  const seekTo = (pct) => {
+    if (!audio.duration || !isFinite(audio.duration)) return;
+    audio.currentTime = pct * audio.duration;
+    setVisual(pct);
+    timeCur.textContent = fmtTime(audio.currentTime);
+  };
+
+  track.addEventListener('click', (e) => {
+    if (e.target.closest('.mp-thumb')) return;
+    seekTo(getPercent(e, track));
+  });
+
+  let pointerId = null;
+  track.addEventListener('pointerdown', (e) => {
+    if (e.button !== undefined && e.button !== 0) return;
+    pointerId = e.pointerId;
+    try { track.setPointerCapture(pointerId); } catch (_) {}
+    isDragging = true;
+    track.classList.add('dragging');
+    wasPlayingBeforeDrag = isPlaying;
+    if (wasPlayingBeforeDrag) audio.pause();
+
+    const pct = getPercent(e, track);
+    setVisual(pct);
+    timeCur.textContent = fmtTime(pct * (audio.duration || 0));
+  });
+
+  track.addEventListener('pointermove', (e) => {
+    if (!isDragging || e.pointerId !== pointerId) return;
+    const pct = getPercent(e, track);
+    setVisual(pct);
+    timeCur.textContent = fmtTime(pct * (audio.duration || 0));
+  });
+
+  const endDrag = (e) => {
+    if (!isDragging) return;
+    if (pointerId !== null && e.pointerId !== pointerId) return;
+    seekTo(getPercent(e, track));
+    isDragging = false;
+    track.classList.remove('dragging');
+    if (pointerId !== null) {
+      try { track.releasePointerCapture(pointerId); } catch (_) {}
+      pointerId = null;
+    }
+    if (wasPlayingBeforeDrag) audio.play().catch(() => {});
+  };
+
+  track.addEventListener('pointerup', endDrag);
+  track.addEventListener('pointercancel', endDrag);
+
+  track.addEventListener('keydown', (e) => {
+    if (!audio.duration || !isFinite(audio.duration)) return;
+    const step = 5;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      audio.currentTime = Math.min(audio.duration, audio.currentTime + step);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      audio.currentTime = Math.max(0, audio.currentTime - step);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      audio.currentTime = 0;
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      audio.currentTime = audio.duration;
+    }
+  });
+
+  /* ============ AUDIO EVENTS ============ */
+  let rafId = null;
+  const loopUpdate = () => {
+    if (!isDragging) {
+      const d = audio.duration;
+      if (d && isFinite(d)) {
+        const pct = audio.currentTime / d;
+        setVisual(pct);
+        timeCur.textContent = fmtTime(audio.currentTime);
+      }
+    }
+    rafId = requestAnimationFrame(loopUpdate);
+  };
+
+  audio.addEventListener('loadedmetadata', () => {
+    timeTot.textContent = fmtTime(audio.duration);
+  });
+
+  audio.addEventListener('play', () => {
+    isPlaying = true;
+    updatePlayUI();
+    if (!rafId) rafId = requestAnimationFrame(loopUpdate);
+  });
+
+  audio.addEventListener('pause', () => {
+    isPlaying = false;
+    updatePlayUI();
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  });
+
+  audio.addEventListener('ended', () => {
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    if (loopMode === 'one') {
+      audio.currentTime = 0;
+      audio.play().catch(() => {});
+    } else if (loopMode === 'all') {
+      loadTrack(currentIdx + 1, true);
+    } else {
+      if (currentIdx < PLAYLIST.length - 1) loadTrack(currentIdx + 1, true);
+      else { isPlaying = false; updatePlayUI(); }
+    }
+  });
+
+  audio.addEventListener('error', () => {
+    if (qaMusicTx) qaMusicTx.textContent = 'Lỗi';
+    isPlaying = false;
+    updatePlayUI();
+  });
+
+  /* ============ AUTOPLAY ON FIRST INTERACTION ============ */
+  const events = ['click', 'touchstart', 'keydown', 'pointerdown'];
+  const unbindAutoplay = () => {
+    if (!autoplayBound) return;
+    autoplayBound = false;
+    events.forEach(ev => window.removeEventListener(ev, tryAutoplay));
+  };
+  const tryAutoplay = () => {
+    if (isPlaying) { unbindAutoplay(); return; }
+    if (!audio.src) loadTrack(currentIdx, false);
+    const p = audio.play();
+    if (p && typeof p.then === 'function') {
+      p.then(() => unbindAutoplay()).catch(() => {});
+    }
+  };
+  events.forEach(ev => window.addEventListener(ev, tryAutoplay, { passive: true }));
+
+  /* ============ PAUSE ON TAB HIDDEN ============ */
   document.addEventListener('visibilitychange', () => {
     if (document.hidden && !audio.paused) audio.pause();
   });
+
+  /* ============ INIT ============ */
+  loadTrack(0, false);
+  updatePlayUI();
+  pop.setAttribute('aria-hidden', 'true');
 })();
 
 /* ============ COPY EMAIL ============ */
@@ -1214,11 +1758,7 @@ const Toast = (() => {
       url: location.href
     };
     if (navigator.share) {
-      try {
-        await navigator.share(data);
-      } catch (e) {
-        // user cancelled — im lặng
-      }
+      try { await navigator.share(data); } catch (e) {}
     } else if (navigator.clipboard && navigator.clipboard.writeText) {
       try {
         await navigator.clipboard.writeText(location.href);
@@ -1232,7 +1772,7 @@ const Toast = (() => {
   });
 })();
 
-/* ============ CURSOR (desktop only) ============ */
+/* ============ CURSOR (desktop) ============ */
 (function () {
   if (!IS_DESKTOP || REDUCED) {
     ['#dot','#ring'].forEach(sel => {
@@ -1263,7 +1803,7 @@ const Toast = (() => {
   document.addEventListener('mousedown', () => document.body.classList.add('mouse-down'));
   document.addEventListener('mouseup', () => document.body.classList.remove('mouse-down'));
 
-  const hoverTargets = 'a, button, [role="button"]';
+  const hoverTargets = 'a, button, [role="button"], [role="slider"]';
   document.addEventListener('mouseover', (e) => {
     const t = e.target.closest(hoverTargets);
     if (!t) return;
@@ -1282,7 +1822,7 @@ const Toast = (() => {
   });
 })();
 
-/* ============ BENTO MOUSE GLOW (desktop only) ============ */
+/* ============ BENTO MOUSE GLOW ============ */
 (function () {
   if (!IS_DESKTOP || REDUCED) return;
   $$('.bento-item').forEach(item => {
@@ -1305,7 +1845,7 @@ const Toast = (() => {
   else img.addEventListener('load', done);
 })();
 
-/* ============ PAUSE ANIMATION WHEN SCROLLING (mobile) ============ */
+/* ============ SCROLL PAUSE ============ */
 (function () {
   if (!IS_MOBILE) return;
   let timer = null;
